@@ -1,4 +1,3 @@
-# Task Delete
 project members: 
 Diego Hidalgo ,
 Kevin Guaña
