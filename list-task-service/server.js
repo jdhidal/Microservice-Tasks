@@ -7,7 +7,8 @@ app.use(bodyParser.json());
 
 const tasks = [
   { id: 1, title: "Task 1", description: "Description 1", userId: 1, completed: false },
-  { id: 2, title: "Task 2", description: "Description 2", userId: 2, completed: false }
+  { id: 2, title: "Task 2", description: "Description 2", userId: 2, completed: false },
+  { id: 3, title: "Task 3", description: "Description 3", userId: 3, completed: false }
 ];
 
 app.get('/tasks', (req, res) => {
