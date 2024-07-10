@@ -40,3 +40,34 @@ jobs:
     - name: Execute Docker Compose
       run: |
         docker-compose up -d
+  deploy-AWS:
+    needs: [build-and-push]  
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Set permissions for private key
+      run: |
+        echo "${{ secrets.AWS_EC2_KEY }}" > key.pem
+        chmod 600 key.pem
+
+    - name: Stop running containers
+      run: |
+        ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@${{ secrets.AWS_EC2_HOST }} 'sudo docker stop service-list-task || true'
+        ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@${{ secrets.AWS_EC2_HOST }} 'sudo docker rm service-list-task || true'
+        ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@${{ secrets.AWS_EC2_HOST }} 'sudo docker stop service-update-task || true'
+        ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@${{ secrets.AWS_EC2_HOST }} 'sudo docker rm service-update-task || true'
+        ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@${{ secrets.AWS_EC2_HOST }} 'sudo docker stop service-delete-task || true'
+        ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@${{ secrets.AWS_EC2_HOST }} 'sudo docker rm service-delete-task || true'
+    
+    - name: Pull Docker images
+      run: |
+        ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@${{ secrets.AWS_EC2_HOST }} 'sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/list-task-service:latest'
+        ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@${{ secrets.AWS_EC2_HOST }} 'sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/update-task-service:latest'
+        ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@${{ secrets.AWS_EC2_HOST }} 'sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/delete-task-service:latest'
+
+    - name: Run new containers
+      run: |
+        ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@${{ secrets.AWS_EC2_HOST }} 'sudo docker run -d --name service-list-task -p 5001:5001 ${{ secrets.DOCKERHUB_USERNAME }}/list-task-service:latest'
+        ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@${{ secrets.AWS_EC2_HOST }} 'sudo docker run -d --name service-update-task -p 5002:5002 ${{ secrets.DOCKERHUB_USERNAME }}/update-task-service:latest'
+        ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@${{ secrets.AWS_EC2_HOST }} 'sudo docker run -d --name service-delete-task -p 5003:5003 ${{ secrets.DOCKERHUB_USERNAME }}/delete-task-service:latest'
