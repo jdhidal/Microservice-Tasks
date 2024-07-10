@@ -1,4 +1,8 @@
-project members: 
+# Microservice Tasks
+
+The problem is having a separate task system in microservices, this project separates the delete, list and update service, the other services are not affected.
+
+## Project members: 
 Diego Hidalgo ,
 Kevin Guaña
 ## Requirements
